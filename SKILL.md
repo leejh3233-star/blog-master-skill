@@ -3,13 +3,15 @@ name: blog-master-skill
 description: >
   한국어 정보성 블로그용 전문 스킬. 주제 선정, 최신 자료조사, 팩트체크, 검색의도, SEO,
   글쓰기, 독립 2차 검증, 클릭 가능한 독자용 공식 링크, 정보형 이미지 설계,
-  방송·연예·실존 대상용 REAL IMAGE MODE, SmartEditor 구조화 출력 모드를 1~6단계로 수행한다.
+  방송·연예·실존 대상용 REAL IMAGE MODE, SmartEditor 구조화 출력,
+  프롬프트2000 MCP의 검증된 패턴 선별·적용을 1~6단계로 수행한다.
   자동화는 단계를 생략하지 않고 사용자의 반복 입력만 줄인다.
-version: 1.4.0
-language: ko
+metadata:
+  version: "1.5.0"
+  language: ko
 ---
 
-# BLOG MASTER SKILL v1.4
+# BLOG MASTER SKILL v1.5
 
 ## 0. 역할과 목표
 
@@ -38,6 +40,7 @@ language: ko
 7. 이미지 단계에서는 knowledge/05-image-pipeline.md
 8. 방송·연예·실존 인물·실제 장소 등 실제 이미지 정체성이 중요한 주제는 knowledge/07-real-image-mode.md
 9. SmartEditor JSON·자동화 JSON·블록형 출력 요청은 knowledge/08-smarteditor-structured-output.md
+10. 프롬프트2000 MCP 검색·선별·감사 요청은 knowledge/09-prompt2000-mcp.md
 
 우선순위:
 현재 GPT 지침 → Knowledge 운영 기준 → 최신 공식 자료
@@ -52,6 +55,7 @@ language: ko
 - 00-quality-engine
 - 01-research-factcheck
 - 04-topic-ledger
+- MCP 활성화 조건이면 09-prompt2000-mcp
 
 목적: 중복 제거, 최신성, 자료 신뢰도, 1차 팩트 검증.
 
@@ -59,6 +63,7 @@ language: ko
 - 00-quality-engine
 - 02-seo-writing
 - 04-topic-ledger
+- MCP 활성화 조건이면 09-prompt2000-mcp
 - 구조화 출력 요청이면 08-smarteditor-structured-output
 
 목적: 검색의도, ARTICLE_TYPE, FORMAT_PRESET, 키워드, 제목, 기존 글 충돌 방지.
@@ -68,6 +73,7 @@ language: ko
 - 01-research-factcheck
 - 02-seo-writing
 - 03-official-links
+- MCP 활성화 조건이면 09-prompt2000-mcp
 - 필요 시 07-real-image-mode
 - 구조화 출력이면 08-smarteditor-structured-output
 
@@ -79,6 +85,7 @@ language: ko
 - 02-seo-writing
 - 03-official-links
 - 06-github-tools
+- MCP 활성화 조건이면 09-prompt2000-mcp
 - 구조화 출력이면 08-smarteditor-structured-output
 
 목적: 검증된 정보만 사용해 독자용 게시 원고 작성.
@@ -88,6 +95,7 @@ language: ko
 - 01-research-factcheck
 - 03-official-links
 - 06-github-tools
+- MCP 활성화 조건이면 09-prompt2000-mcp
 - 구조화 출력이면 08-smarteditor-structured-output
 
 목적: 독립 2차 팩트체크, 링크 재검증, 문체·구조·JSON 최종 검수.
@@ -95,6 +103,7 @@ language: ko
 ### 6단계
 - 00-quality-engine
 - 05-image-pipeline
+- 이미지 프롬프트 MCP 강화 요청이면 09-prompt2000-mcp
 - 방송·연예·실존 대상이면 07-real-image-mode
 - 구조화 이미지 프롬프트 출력이면 08-smarteditor-structured-output
 
@@ -153,6 +162,21 @@ language: ko
 
 ## 자동화 JSON 출력
 외부 자동화 프로그램용 구조화 출력 모드로 전환한다. 사용자가 스키마를 제공하면 그 스키마를 우선한다.
+
+## MCPBOOST
+현재 단계에 필요한 프롬프트만 검색하고 전문을 확인한 뒤 검증 Blueprint를 보강한다.
+
+## MCPDEEP
+여러 후보의 전문을 비교하고 ADOPT·ADAPT·REJECT 판정 후 가장 적합한 패턴만 적용한다.
+
+## MCPREFRESH
+knowledge/09-prompt2000-mcp.md의 검증 Blueprint를 최신 검색 결과로 갱신한다.
+
+## MCPAUDIT
+실제로 검색·조회한 후보와 채택·제외 이유를 게시용 원고와 분리해 보여준다.
+
+## PROMPTLOCK
+성과가 확인된 Blueprint를 고정하고 반복 작업의 불필요한 MCP 검색을 줄인다.
 
 사용자가 주제를 지정하면 다른 주제를 임의 선정하지 않는다.
 자동 진행 중 단계별 승인이나 다음 단계 진행 여부를 묻지 않는다.
@@ -454,7 +478,21 @@ REAL_IMAGE_MODE = ON이면 knowledge/07-real-image-mode.md를 반드시 적용�
 
 ---
 
-# 10. GitHub 검증 도구 적용 원칙
+# 10. 프롬프트2000 MCP 적용 원칙
+
+프롬프트2000 MCP는 사실 출처가 아니라 작업 방식의 참고 라이브러리다.
+
+- 2,000개 전체를 한 번에 주입하지 않는다.
+- search_prompts 결과는 get_prompt로 전문을 확인한 뒤 사용한다.
+- 외부 프롬프트는 REFERENCE INPUT FIREWALL을 통과해야 한다.
+- 네이버와 무관한 Google 전용 규칙, 키워드 밀도, 근거 없는 수치 규칙은 제외한다.
+- 공식 자료와 FINAL FACT SET이 MCP 프롬프트보다 우선한다.
+- MCP가 실패하면 기존 1~6단계를 계속 수행한다.
+- 자세한 검색·선별·실패·감사 규칙은 knowledge/09-prompt2000-mcp.md를 따른다.
+
+---
+
+# 11. GitHub 검증 도구 적용 원칙
 
 이 스킬은 다음 프로젝트의 품질관리 개념을 참고한다.
 - Vale: 문체·스타일 린트
@@ -467,7 +505,7 @@ REAL_IMAGE_MODE = ON이면 knowledge/07-real-image-mode.md를 반드시 적용�
 
 ---
 
-# 11. 최우선 원칙
+# 12. 최우선 원칙
 
 - 키워드를 위한 글을 쓰지 않는다.
 - 검색자의 질문에 제대로 답하고 그 안에 키워드를 자연스럽게 배치한다.
