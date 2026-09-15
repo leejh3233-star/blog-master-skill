@@ -1,32 +1,33 @@
 ---
 name: naver-blog-master
 description: >
-  네이버 블로그용 AI 멀티에이전트 편집국 스킬. 자유 입력을 받아 1~6단계 조사·기획·검증·집필·시각 설계를 수행한다.
-  Requirement Ledger, Reviewer/Approval Gate, Hard Approval Loop, Final Control Tower, Adaptive Link Timing,
-  Retention Architecture, Link-Critical Mode, Multi-Pass Link Verification, Visible Link Delivery,
-  Copyable Link Export Fallback, Trusted Visual Pipeline, Delivery Barrier, Article State Machine을 사용한다.
-  v3.8부터 링크의 존재·정확성뿐 아니라 실제 사용자 화면에서 보이고 클릭 가능한지, 복사 가능한 형태로 전달됐는지까지 검증한다.
-version: 3.8
+  네이버 블로그용 AI 멀티에이전트 편집국 스킬. 자유 입력을 받아 주제 발굴·검색의도·팩트체크·링크검증·집필·이미지 설계까지 수행한다.
+  Requirement Ledger, Micro-Gate Pipeline, Reviewer/Approval Gate, Hard Approval Loop, Final Control Tower,
+  Adaptive Link Timing, Link-Critical Mode, Multi-Pass Link Verification, Inline Clickable Link Gate,
+  Trusted Visual Pipeline, Delivery Barrier, Article State Machine을 사용한다.
+  v3.9부터 자동화 과정의 생략을 막기 위해 각 대단계를 세부 단계로 분리하고, 필수 체크포인트가 PASS되지 않으면 다음 단계로 진행하지 않는다.
+  링크는 글쓰기 블록 안의 '클릭 가능한 문구 링크'를 기본값으로 사용한다.
+version: 3.9
 language: ko
 ---
 
-# NAVER BLOG MASTER SKILL v3.8
-## Verified Content × Visible Links × Copyable Publish Export × Hard QA Loop
+# NAVER BLOG MASTER SKILL v3.9
+## Micro-Gate Editorial OS × Inline Clickable Links × Hard Approval Loop
 
-# 0. 가장 중요한 실행 원칙
+# 0. 핵심 목표
 
-이 스킬의 목표는 `좋아 보이는 글`이 아니라 **실제로 네이버에 발행할 수 있는 완성 패키지**를 만드는 것이다.
+이 스킬의 목표는 `한 번에 빨리 생성`이 아니라 **필수 과정을 생략하지 않고 실제 발행 가능한 글을 완성하는 것**이다.
 
-절대 규칙:
+가장 중요한 원칙:
 
-1. 글 요청이면 발행용 원고를 먼저 완전 전달한다.
-2. 글이 사용자 화면에 완전히 전달되기 전에는 이미지 도구를 호출하지 않는다.
-3. 사용자 요구사항 하나라도 빠졌으면 승인하지 않는다.
-4. 검수 FAIL은 경고로 끝내지 않고 문제 단계로 반려해 수정 후 재검수한다.
-5. 링크가 중요한 글은 LINK-CRITICAL MODE를 자동 적용한다.
-6. 링크는 `있다`가 아니라 `정확하다 + 열린다 + 목적이 맞다 + 최신이다 + 사용자에게 실제로 전달된다`까지 통과해야 한다.
-7. 현재 ChatGPT 화면에서 글쓰기 블록 내부 링크 렌더링이 불안정하면, 억지로 PASS 처리하지 않는다.
-8. 링크가 글쓰기 블록 안에서 보이지 않거나 복사되지 않으면 **MARKER + CLICK PANEL + COPYABLE EXPORT**로 폴백한다.
+1. 자동화하더라도 필수 단계는 합치거나 생략하지 않는다.
+2. 각 세부 단계는 `작업 → 독립 검수 → 승인`을 거친다.
+3. 이전 단계가 PASS가 아니면 다음 단계 실행 금지.
+4. FAIL이면 정확히 문제가 생긴 단계로 돌아가 수정 후 다시 검수한다.
+5. 최종 글은 사용자에게 먼저 완전 전달하고 이미지는 다음 사용자 턴부터 진행한다.
+6. 링크는 기본적으로 **주소를 길게 노출하지 않고, 글쓰기 블록 안의 문구 자체에 클릭 가능한 링크를 건다.**
+7. 클릭 링크를 만들기 전에 URL을 실제로 검증한다.
+8. 링크가 중요한 글은 LINK-CRITICAL MODE를 자동 적용한다.
 9. 실존 인물·방송·장소 이미지는 사실성과 사용권을 검증한다.
 10. 광고 클릭을 직접 유도하지 않는다.
 
@@ -34,600 +35,489 @@ language: ko
 
 # 1. ARTICLE STATE MACHINE
 
-모든 글마다 내부 상태를 만든다.
+모든 글은 독립 상태를 가진다.
 
-- `ARTICLE_ID`
-- `ARTICLE_TOPIC`
-- `ARTICLE_TITLE`
-- `TOPIC_LOCK`
-- `REQUIREMENT_LEDGER`
-- `FACT_SET`
-- `LINK_SET`
-- `LINK_HEALTH_LEDGER`
-- `LINK_DELIVERY_LEDGER`
-- `EXPECTED_READER_LINK_COUNT`
-- `DELIVERED_READER_LINK_COUNT`
-- `LINK_CRITICAL_MODE = TRUE/FALSE`
-- `LINK_DELIVERY_MODE = INLINE_VISIBLE / MARKER_PLUS_PANEL / COPYABLE_EXPORT`
-- `IMAGE_PLAN`
-- `PUBLISH_PACKAGE_DELIVERED = FALSE/TRUE`
-- `VISUAL_QUEUE_STATUS = LOCKED/READY/ACTIVE/DONE`
-- `NEXT_IMAGE_INDEX`
+- ARTICLE_ID
+- ARTICLE_TOPIC
+- ARTICLE_TITLE
+- TOPIC_LOCK
+- REQUIREMENT_LEDGER
+- FACT_SET
+- SOURCE_LEDGER
+- LINK_REQUIREMENT_MAP
+- LINK_SET
+- LINK_HEALTH_LEDGER
+- INLINE_CLICKABLE_LINK_SET
+- EXPECTED_READER_LINK_COUNT
+- INSERTED_READER_LINK_COUNT
+- LINK_CRITICAL_MODE = TRUE/FALSE
+- IMAGE_PLAN
+- PUBLISH_PACKAGE_DELIVERED = FALSE/TRUE
+- VISUAL_QUEUE_STATUS = LOCKED/READY/ACTIVE/DONE
+- NEXT_IMAGE_INDEX
 
-## TOPIC_LOCK
-이미지 생성 직전 반드시 현재 ARTICLE_ID의 주제·인물·제품·장소·연도·시즌을 다시 확인한다.
-이전 글의 단풍·맛집·여행·제품 이미지 키워드가 섞이면 즉시 FAIL.
-
----
-
-# 2. TWO-PHASE EXECUTION
-
-## PHASE A — EDITORIAL / PUBLISH PACKAGE
-
-A0 INPUT INTERPRETER + REQUIREMENT LEDGER
-→ A1 TRAFFIC / TREND / SERP SCOUT
-→ Q1 REVIEW → G1 APPROVAL
-→ A2 KEYWORD / INTENT / TITLE / FIRST SCREEN
-→ Q2 REVIEW → G2 APPROVAL
-→ A3 RESEARCH / FACT / PLACE / ACTION LINK / YOUTUBE
-→ LINK DISCOVERY
-→ LINK VERIFIER PASS 1
-→ LINK TIMING STRATEGIST
-→ Q3 REVIEW → G3 APPROVAL
-→ A4 CONTENT / MOBILE UX / RETENTION / INTERNAL JOURNEY
-→ Q4 REVIEW → G4 APPROVAL
-→ A5 WRITER / COMPRESSION / MOBILE FINAL / SECOND FACT CHECK
-→ LINK DELIVERY PLANNER
-→ INLINE/MARKER LINK COMPOSER
-→ LINK VERIFIER PASS 2
-→ USER-VISIBLE LINK GATE
-→ COPYABLE LINK GATE
-→ Q5 REVIEW → G5 APPROVAL
-→ A6 VISUAL PLAN / SOURCE / RIGHTS / IDENTITY PRECHECK
-→ G6 VISUAL PLAN APPROVAL
-→ PRE-PUBLISH LINK RECHECK
-→ FINAL GATES
-→ FINAL CONTROL TOWER
-→ PUBLISH PACKAGE MANAGER
-→ USER
-
-이후에만:
-`PUBLISH_PACKAGE_DELIVERED = TRUE`
-`VISUAL_QUEUE_STATUS = READY`
-
-## PHASE B — VISUAL QUEUE
-
-별도 사용자 턴에서만 이미지 생성.
-`이미지 시작`, `1`, `다음`, `계속` 입력 시 현재 ARTICLE_ID의 NEXT_IMAGE_INDEX 한 장만 생성한다.
+모든 상태값은 현재 ARTICLE_ID에만 속한다.
+이전 글의 제목·링크·이미지 계획을 관성적으로 재사용하지 않는다.
 
 ---
 
-# 3. REQUIREMENT LEDGER
+# 2. NO-SKIP MICRO-GATE PIPELINE
 
-A0에서 사용자 요구를 장부화한다.
+AUTO FULL은 아래 파이프라인을 순서대로 진행한다.
 
-예:
-- 조회수 최대화
-- 체류 강화
-- 공식 팩트체크
-- 행동 링크
-- 링크 후반 배치
-- 링크 실제 오픈 검증
-- 링크가 사용자 화면에서 실제 보이거나 클릭 가능할 것
-- 네이버 복사용 링크 전달
-- 모바일 가독성
-- 실제 내부링크
-- YouTube
-- 이미지 개별 제작
-- 실존 인물 정확성
-- 이미지 권리 검증
-- 수익화 안전
+## STAGE 0 — INPUT CONTROL
+A0-1 사용자 입력 해석
+→ A0-2 Requirement Ledger 작성
+→ A0-3 목표/독자/지역/시점/금지사항 잠금
+→ Q0 검수
+→ G0 승인
 
-상태:
-`REQUIRED / SATISFIED / NOT-APPLICABLE / BLOCKED`
+G0 PASS 전 STAGE 1 금지.
 
-REQUIRED가 SATISFIED가 아니면 최종 승인 금지.
+## STAGE 1 — TRAFFIC / TOPIC
+A1-1 후보 주제 10~20개 탐색
+→ A1-2 시의성·검색수요·경쟁·확장성 분석
+→ A1-3 공식자료 확보 가능성 확인
+→ A1-4 링크 중요도 판정
+→ A1-5 최종 주제 1개 선정
+→ Q1 독립 검수
+→ G1 승인
+
+G1 PASS 전 STAGE 2 금지.
+
+## STAGE 2 — KEYWORD / TITLE / FIRST SCREEN
+A2-1 메인·보조 키워드 정의
+→ A2-2 독자 질문 최소 5개 정의
+→ A2-3 검색의도 정의
+→ A2-4 제목 후보 작성
+→ A2-5 제목 선택
+→ A2-6 첫 화면 핵심답 작성
+→ A2-7 계속 읽을 추가 가치 정의
+→ Q2 검수
+→ G2 승인
+
+G2 PASS 전 STAGE 3 금지.
+
+## STAGE 3A — FACT RESEARCH
+A3A-1 확인해야 할 팩트 목록 작성
+→ A3A-2 공식 1차 자료 검색
+→ A3A-3 보조 자료 교차검증
+→ A3A-4 날짜·숫자·가격·장소 최신성 확인
+→ A3A-5 Place Identity / Entity Identity 확인
+→ A3A-6 FACT_SET 확정
+→ Q3A 팩트 검수
+→ G3A 승인
+
+## STAGE 3B — LINK REQUIREMENT MAP
+A3B-1 독자가 행동/확인하려면 어떤 링크가 필요한지 먼저 정의
+→ A3B-2 각 링크를 REQUIRED / OPTIONAL로 분류
+→ A3B-3 URGENT / STANDARD / FACT-CHECK / INTERNAL 분류
+→ A3B-4 EXPECTED_READER_LINK_COUNT 확정
+→ Q3B 누락 검수
+→ G3B 승인
+
+**링크를 찾기 전에 반드시 필요한 링크 종류부터 정의한다.**
+이 단계가 없으면 링크 검증을 시작하지 않는다.
+
+## STAGE 3C — LINK DISCOVERY
+A3C-1 각 REQUIRED 링크 후보 검색
+→ A3C-2 공식 deep link 우선 선정
+→ A3C-3 불필요한 추적 파라미터 제거
+→ Q3C 후보 적합성 검수
+→ G3C 승인
+
+## STAGE 3D — LINK VERIFIER PASS 1
+각 REQUIRED 링크마다:
+1. 실제로 연다.
+2. 404/오류/종료 페이지가 아닌지 확인한다.
+3. 공식 도메인인지 확인한다.
+4. 링크 목적과 실제 페이지 목적이 같은지 확인한다.
+5. 현재 연도·시즌·제품·행사가 맞는지 확인한다.
+6. 오래된 프로모션이 아닌지 확인한다.
+7. 로그인/앱 전용 등 제약을 기록한다.
+8. 더 직접적인 공식 링크가 없는지 확인한다.
+
+→ Q3D LINK HEALTH 검수
+→ G3D 승인
+
+REQUIRED 링크 하나라도 FAIL이면 STAGE 3C로 반려.
+
+## STAGE 3E — LINK PLACEMENT
+A3E-1 링크별 본문 위치 지정
+→ A3E-2 너무 빠른 외부 이탈 위험 확인
+→ A3E-3 긴급 링크는 충분히 빠른지 확인
+→ A3E-4 팩트체크 링크는 관련 설명 뒤 배치
+→ Q3E 검수
+→ G3E 승인
+
+G3A~G3E 전부 PASS 전 STAGE 4 금지.
+
+## STAGE 4 — CONTENT ARCHITECTURE
+A4-1 10초 핵심답
+→ A4-2 30초 판단기준
+→ A4-3 비교·예외·실수방지
+→ A4-4 FAQ·체크리스트
+→ A4-5 내부 여정
+→ A4-6 이미지·영상·링크 위치 통합
+→ Q4 NO-SEARCH-BACK / RETENTION 검수
+→ G4 승인
+
+## STAGE 5A — DRAFT WRITING
+A5A-1 승인된 FACT_SET만 사용해 초안 작성
+→ A5A-2 모바일 문단 정리
+→ A5A-3 반복·군더더기 제거
+→ A5A-4 제목 약속 회수 확인
+→ Q5A 편집 검수
+→ G5A 승인
+
+## STAGE 5B — INLINE CLICKABLE LINK COMPOSER
+**v3.9 기본 링크 방식**
+
+검증된 각 REQUIRED 링크를 글쓰기 블록 안의 승인된 위치에:
+
+`[코레일 승차권 예매 바로가기](검증된 URL)`
+
+처럼 **문구 자체가 클릭되는 링크**로 넣는다.
+
+기본 규칙:
+- 긴 raw URL을 본문에 노출하지 않는다.
+- `공식 링크 확인` 같은 문구만 쓰고 링크를 걸지 않는 것 금지.
+- 링크는 반드시 검증된 LINK_SET의 URL만 사용.
+- 같은 링크를 불필요하게 반복하지 않는다.
+- 사용자에게 가장 이해하기 쉬운 행동 문구를 사용한다.
+
+A5B-1 REQUIRED 링크 전부 삽입
+→ A5B-2 INSERTED_READER_LINK_COUNT 계산
+→ A5B-3 EXPECTED == INSERTED 확인
+→ Q5B 누락 검수
+→ G5B 승인
+
+## STAGE 5C — CLICKABLE LINK VERIFIER PASS 2
+글쓰기 블록에 삽입한 각 링크에 대해:
+1. 링크 라벨과 목적이 일치하는가?
+2. 대상 URL이 PASS 1에서 승인된 URL과 같은가?
+3. 실제로 다시 열리는가?
+4. 현재성에 문제가 없는가?
+5. 링크가 다른 문단으로 잘못 이동하지 않았는가?
+
+→ Q5C 검수
+→ G5C 승인
+
+하나라도 FAIL이면 STAGE 5B 또는 STAGE 3C로 반려.
+
+## STAGE 5D — SECOND FACT CHECK
+완성 원고에서:
+- 숫자
+- 날짜
+- 가격
+- 장소
+- 링크 주변 설명
+- 제목/본문 일치
+을 다시 검증한다.
+
+→ Q5D 검수
+→ G5D 승인
+
+## STAGE 6 — VISUAL PLAN
+A6-1 이미지 역할 정의
+→ A6-2 실제 사진 필요 여부 판단
+→ A6-3 Visual Source Scout
+→ A6-4 Rights Audit
+→ A6-5 Identity Sheet
+→ A6-6 개별 이미지 프롬프트 설계
+→ Q6 검수
+→ G6 승인
 
 ---
 
-# 4. HARD APPROVAL LOOP
+# 3. LINK-CRITICAL MODE
 
-반려 매핑:
-- 주제/트래픽 → A1
-- 제목/검색의도/첫 화면 → A2
-- 팩트/날짜/가격/장소/링크 후보 → A3
-- 구조/체류/내부링크 → A4
-- 문장/모바일/중복/과장 → A5
-- 링크 실제 열림/최신성/목적 불일치 → LINK DISCOVERY/A3
-- 링크가 사용자 화면에서 보이지 않음 → LINK DELIVERY PLANNER
-- 복사 가능한 링크가 필요한데 전달 실패 → COPYABLE EXPORT
-- 이미지 사실/권리/주제불일치 → A6
-- 발행 패키지 누락 → PUBLISH PACKAGE MANAGER
-
-PASS가 될 때까지 해당 단계와 영향을 받는 후속 검수를 반복한다.
-해결 불가능하면 BLOCKED 또는 LIMITED로 명시한다.
-
----
-
-# 5. 1단계 — TRAFFIC / TOPIC
-
-가능하면 현재 웹·네이버 검색환경을 조사한다.
-
-평가:
-- 검색수요
-- 시의성
-- 모바일 관심
-- 최근 상승 가능성
-- 경쟁 문서
-- 계절성
-- 공식자료 확보 가능성
-- 홈피드 확장성
-- 체류 확장성
-- 후속글 확장성
-- 링크 중요도
-
-확인되지 않은 검색량 숫자는 만들지 않는다.
-
-## LINK-CRITICAL 판정
-
-다음 중 하나라도 해당하면 `LINK_CRITICAL_MODE = TRUE`:
+다음 중 하나라도 해당하면 TRUE:
 - 예매
 - 신청
 - 가입
 - 예약
 - 지도/길찾기
 - 잔여석/재고
-- 지원금/정책 신청
-- 통신사/쇼핑 공식 신청
+- 정책·지원금 신청
+- 통신사·쇼핑 공식 신청
 - 방송 공식 클립
-- 독자가 직접 팩트체크해야 하는 글
+- 독자가 직접 공식자료를 확인해야 하는 글
 - 사용자가 링크를 강하게 요구한 경우
 
-이 모드에서는 링크 검증뿐 아니라 **링크 전달 성공**까지 필수다.
+LINK-CRITICAL MODE에서는:
+- STAGE 3B~3E 생략 금지
+- STAGE 5B~5C 생략 금지
+- REQUIRED 링크 100% 삽입 필수
+- PRE-PUBLISH LINK RECHECK 필수
+- 하나라도 FAIL이면 최종 승인 금지
 
 ---
 
-# 6. 2단계 — KEYWORD / TITLE / FIRST SCREEN
-
-- 메인 키워드 1개
-- 보조 키워드
-- 관련 엔티티
-- 독자 질문 최소 5개
-- 검색의도
-- 제목 후보
-- 첫 화면 한 줄 답
-- 추가 정독 가치
-- 썸네일 메시지
-
-FIRST SCREEN:
-- 핵심 결론
-- 중요 날짜/가격/시간/조건
-- 계속 읽을 이유
-
-긴 인사·낚시 서론·핵심 답 숨기기 금지.
-
----
-
-# 7. ANSWER FIRST + RETENTION
-
-기본 구조:
-
-10초 핵심
-→ 30초 판단기준
-→ 비교/예외/실수방지
-→ FAQ/체크리스트/영상/정보이미지
-→ 내부글
-→ 후반 행동 링크
-
-체류는 반복이 아니라 새로운 정보로 만든다.
-
----
-
-# 8. ADAPTIVE LINK TIMING
+# 4. LINK TIMING
 
 기본:
 `답은 초반, 깊이는 중간, 행동 링크는 후반.`
 
-- URGENT: 오늘 마감·잔여석·즉시 신청 → 상단 10~25%
-- STANDARD: 지도·예약·가입·신청·일반예매 → 후반 60~90%
-- FACT-CHECK: 공식자료·통계·보도자료 → 관련 설명 뒤 또는 후반
-- INTERNAL: 실제 발행한 관련글만 중반 이후 1~2개
+- URGENT: 상단 10~25%, 최소 맥락 뒤
+- STANDARD: 본문 60~90%
+- FACT-CHECK: 관련 설명 뒤 또는 후반
+- INTERNAL: 실제 발행된 관련글만 중반 이후 1~2개
 
-필수 링크를 빼서 체류를 강제하지 않는다.
+체류를 위해 필수 링크를 숨기지 않는다.
+반대로 첫 문장부터 외부 링크를 던져 조기 이탈시키지도 않는다.
 
 ---
 
-# 9. RESEARCH / FACT / LINK DISCOVERY
+# 5. CLICKABLE LINK GATE
+
+최종 글쓰기 블록은 다음을 만족해야 한다.
+
+- REQUIRED 링크가 모두 클릭 가능한 문구 링크로 존재
+- EXPECTED_READER_LINK_COUNT == INSERTED_READER_LINK_COUNT
+- 링크 라벨만 있고 실제 hyperlink가 없는 항목 0개
+- 잘못된 메인 홈페이지 대체 0개
+- 오래된/종료된 페이지 0개
+- LINK-CRITICAL이면 모든 링크 FINAL_PASS
+
+**별도 링크팩이 존재해도 글쓰기 블록 안 클릭 링크가 없으면 FAIL.**
+
+TXT/HTML export는 기본 출력이 아니다.
+사용자가 요청하거나 현재 surface에서 클릭 링크 렌더링이 실제로 실패한 경우에만 fallback으로 사용한다.
+
+---
+
+# 6. FACT / SOURCE RULES
 
 출처 우선순위:
 A. 정부·공공기관·공식 홈페이지·공식 통계·공식 방송
 B. 주요 언론·전문기관·연구기관
 C. 블로그·SNS·커뮤니티
 
-C는 현장 참고용이며 중요 숫자의 단독 근거로 사용하지 않는다.
+C는 중요 숫자의 단독 근거로 사용하지 않는다.
 
-각 링크에 기록:
-- PURPOSE
-- READER_REQUIRED
-- TYPE
-- SOURCE_URL
-- CANONICAL_URL
-- FINAL_DESTINATION
-- OFFICIAL_DOMAIN
-- CURRENT_PAGE
-- ACCESS_LIMITATION
-- BODY_INSERT_POSITION
-- LINK_STATUS
+SOURCE LEDGER:
+`팩트 → 출처 → 확인일 → 신뢰도 → 본문 사용 위치`
+
+확인되지 않은 검색량·가격·시간·주소·링크를 만들지 않는다.
 
 ---
 
-# 10. MULTI-PASS LINK VERIFICATION
+# 7. ANSWER FIRST + RETENTION
 
-## PASS 1 — 후보 URL 실제 오픈
+구조:
+10초 핵심
+→ 30초 판단기준
+→ 비교/예외/실수방지
+→ FAQ/체크리스트/영상/정보이미지
+→ 실제 내부글
+→ 행동 링크
 
-READER_REQUIRED 링크를 가능한 브라우저/검색 도구로 실제 연다.
-
-확인:
-1. 실제로 열리는가
-2. 404/오류/종료 페이지가 아닌가
-3. 공식 도메인인가
-4. 링크 목적과 페이지 목적이 일치하는가
-5. 현재 연도·시즌·이벤트·제품이 맞는가
-6. 오래된 프로모션이 아닌가
-7. 로그인/앱/지역 제한이 있는가
-8. tracking 제거 후에도 정상인가
-9. 더 직접적인 공식 deep link가 있는가
-
-PASS → `PASS1_VERIFIED`
-
-## PASS 2 — 전달 직전 URL 재검증
-
-최종 전달에 사용되는 실제 대상 링크를 다시 연다.
-PASS 1과 목적·도착지가 달라졌으면 FAIL.
-
-## PRE-PUBLISH RECHECK
-
-예매·신청·예약·가입·잔여석·재고·프로모션 등 날짜 민감 링크는 Final Control Tower 직전에 다시 확인한다.
-
-PASS → `FINAL_PASS`
+체류는 반복이 아니라 새로운 정보로 만든다.
 
 ---
 
-# 11. LINK DELIVERY REALITY CHECK — v3.8 핵심
+# 8. MOBILE FIRST
 
-**링크 검증과 링크 전달은 별개다.**
-
-검증된 URL이 내부 데이터에 있어도 사용자 화면에서 보이지 않거나 클릭할 수 없으면 전달 실패다.
-
-## 11.1 LINK DELIVERY MODE
-
-### MODE A — INLINE_VISIBLE
-현재 출력 surface가 발행용 글쓰기 블록 안에서 링크를 실제로 보이고 클릭 가능하게 유지하는 경우.
-
-조건:
-- 사용자 화면에 링크 라벨이 보임
-- 클릭 가능한 링크로 렌더링됨
-- 복사 시 링크 정보가 보존되는 것이 확인 가능한 경우
-
-이 조건을 확신할 수 없으면 MODE A를 사용하지 않는다.
-
-### MODE B — MARKER_PLUS_PANEL
-현재 ChatGPT 글쓰기 블록에서 링크 렌더링이 불안정한 경우의 기본 안전 모드.
-
-발행용 글쓰기 블록에는 정확한 위치에 가시적 마커를 넣는다.
-
-예:
-`[공식 링크 L1 — 근로장려금 신청 바로가기]`
-
-글쓰기 블록 직후에는 같은 번호의 **클릭 가능한 링크 패널**을 출력한다.
-
-- L1 근로장려금 신청 바로가기
-- L2 대상 여부 확인
-- L3 공식 안내
-
-링크 패널은 현재 제품이 지원하는 실제 클릭 가능한 링크 UI를 사용한다.
-
-**마커만 있고 클릭 패널이 없으면 FAIL.**
-
-### MODE C — COPYABLE_EXPORT
-사용자가 네이버에 복사·붙여넣기할 때 실제 URL 문자열까지 보존되어야 하거나, LINK-CRITICAL 글인데 글쓰기 블록에서 raw URL 보존을 확신할 수 없는 경우.
-
-가능한 환경이면 `naver-publish-ready.txt` 또는 `naver-publish-ready.html` 같은 링크 포함 복사용 파일을 생성한다.
-
-파일에는:
-- 제목
-- 본문
-- 이미지 삽입 표시
-- 각 링크 목적 문구
-- 실제 검증 URL
-- 태그
-
-를 포함한다.
-
-LINK-CRITICAL_MODE에서는 INLINE_VISIBLE이 확실하지 않으면 **COPYABLE_EXPORT를 우선 권장/생성**한다.
-
-파일 생성 기능이 없는 환경이면:
-- MODE B를 사용
-- `COPYABLE_URL_DELIVERY = LIMITED` 표시
-- 완전 자동 복사 가능하다고 거짓으로 PASS 처리하지 않는다.
-
----
-
-# 12. USER-VISIBLE LINK GATE
-
-최종 응답 전에 확인:
-
-- 사용자 화면에 링크 목적이 명확히 보이는가?
-- 실제 클릭 가능한 링크 UI가 존재하는가?
-- 글쓰기 블록의 링크 마커와 클릭 패널 번호가 1:1로 일치하는가?
-- 링크 패널이 글과 너무 멀리 떨어져 있지 않은가?
-- LINK-CRITICAL 글에서 필수 링크가 전부 보이는가?
-
-`EXPECTED_READER_LINK_COUNT == DELIVERED_READER_LINK_COUNT`여야 한다.
-
-**내부 참조 토큰이 존재한다는 이유만으로 PASS 금지.**
-
----
-
-# 13. COPYABLE LINK GATE
-
-사용자가 `복사 붙여넣기`, `바로 발행`, `네이버에 그대로`, `링크까지 포함`을 원하면 다음을 확인한다.
-
-- 현재 surface가 링크를 복사 가능한 형태로 보존하는가?
-- 확신할 수 없으면 COPYABLE_EXPORT가 생성됐는가?
-- export의 URL이 LINK_HEALTH_LEDGER의 FINAL_PASS URL과 일치하는가?
-- export 생성 후 URL을 다시 파싱/확인할 수 있으면 1회 검증한다.
-
-이 조건을 만족하지 못하면 `완전한 링크 포함 발행본`이라고 표시하지 않는다.
-
----
-
-# 14. INLINE/MARKER LINK COMPOSER
-
-A5 원고 완성 후 LINK_SET을 읽고 현재 LINK_DELIVERY_MODE에 맞춰 배치한다.
-
-- INLINE_VISIBLE: 지원되는 clickable link 형식 사용
-- MARKER_PLUS_PANEL: 본문에 `[공식 링크 L# — 목적]` 마커 삽입
-- COPYABLE_EXPORT: export 파일에는 raw URL 포함
-
-글쓰기 블록에서 링크가 보이지 않는 환경인데 raw URL을 강제로 넣었다고 주장하지 않는다.
-
----
-
-# 15. CONTENT / MOBILE / MONETIZATION
-
-모바일:
-- 한 문단 1~3문장 우선
+- 1~3문장 문단 우선
 - 짧은 소제목
-- 핵심 숫자 분리
+- 숫자·시간·가격 분리
 - 넓은 표보다 세로 카드
-- 링크 마커는 목적이 바로 이해되게
-- 이미지로 호흡 분리
-
-체류:
-- 비교
-- 예외
-- 실수 방지
-- FAQ
-- 저장 체크리스트
-- 공식 영상
-- 실제 내부글
-
-수익화:
-- 광고 클릭 요청 금지
-- 광고 화살표/클릭 유도 이미지 금지
-- 수익은 검색 유입·정독·스크롤·내부 이동·재방문·신뢰로 강화
+- 링크 문구는 목적이 즉시 이해되게
+- 이미지로 긴 문단 호흡 분리
 
 ---
 
-# 16. TRUSTED VISUAL PIPELINE
+# 9. TRUSTED VISUAL PIPELINE
 
-이미지는 개별 업로드용으로만 설계한다.
+개별 이미지 전용. 통합시트 기본 금지.
 
-VISUAL SOURCE 우선순위:
+우선순위:
 1. 사용자 제공 이미지
-2. 상업적 이용·변형 조건이 명확한 공식/공공 자료
-3. 공공누리 0/1 유형
-4. CC0/Public Domain
-5. CC BY 등 허용 라이선스
-6. 명시적 재사용 허가 프레스킷
+2. 사용권이 명확한 공식/공공 자료
+3. 공공누리 0/1
+4. CC0 / Public Domain
+5. CC BY
+6. 명시적 프레스킷
 
-일반 뉴스사진·연예기사 사진·SNS·팬사진은 명시적 권리가 없으면 재사용/재가공하지 않는다.
+권리 불명 뉴스사진·연예기사·SNS·팬사진 재사용/재가공 금지.
 
-실존 인물·방송·스포츠는 IDENTITY SHEET로 인물명·소속·프로그램·날짜·장소·의상/유니폼·실제 상황을 잠근다.
-정확성을 확보하지 못하면 다른 얼굴로 대체하지 않고 장소·데이터·상징 이미지로 전환한다.
+실존 인물·방송·스포츠는 Identity Sheet로:
+- 인물명
+- 소속/팀
+- 프로그램/회차
+- 날짜/장소
+- 의상/유니폼
+- 실제 상황
+을 잠근다.
 
----
-
-# 17. IMAGE QUEUE — 안전 모드
-
-글과 링크 전달이 끝난 뒤 별도 사용자 턴에서 한 장씩 생성한다.
-
-같은 턴:
-- 글 작성/검수
-- 링크 검증/전달
-- Publish Package 출력
-- 이미지 계획
-- `VISUAL_QUEUE_STATUS = READY`
-
-다음 턴:
-- `이미지 시작`, `1`, `다음`, `계속`
-- 현재 ARTICLE_ID 확인
-- NEXT_IMAGE_INDEX 한 장 생성
-
-백그라운드 다중 생성 약속 금지.
+정확성을 확보하지 못하면 닮은 가짜 인물을 만들지 않고 장소·데이터·상징 이미지로 전환한다.
 
 ---
 
-# 18. DELIVERY BARRIER
+# 10. HARD APPROVAL LOOP
 
-이미지 도구 호출 전 반드시:
-- PUBLISH_PACKAGE_DELIVERED = TRUE
-- 제목/본문 완전 출력
-- 링크 전달 모드 결정 완료
-- USER-VISIBLE LINK GATE 통과
-- LINK-CRITICAL이면 필수 링크 모두 FINAL_PASS
-- 복사형 링크 요구 시 COPYABLE LINK GATE 통과 또는 LIMITED 명시
-- 이미지 삽입 표시/제작 목록/QA 출력
+각 Gate는 PASS / FAIL / BLOCKED 중 하나만 반환한다.
 
-하나라도 빠지면 이미지 생성 금지.
+**암묵적 PASS 금지.**
+`문제 없어 보인다`는 PASS가 아니다.
+체크리스트 항목을 실제 확인해야 PASS다.
 
----
+FAIL 반려:
+- 입력 누락 → STAGE 0
+- 트래픽/주제 → STAGE 1
+- 제목/검색의도 → STAGE 2
+- 팩트 → STAGE 3A
+- 필요한 링크 누락 → STAGE 3B
+- 잘못된 링크 후보 → STAGE 3C
+- 링크 열림/목적 오류 → STAGE 3D
+- 링크 위치 → STAGE 3E
+- 구조/체류 → STAGE 4
+- 문장/모바일 → STAGE 5A
+- 본문 링크 누락 → STAGE 5B
+- 클릭 링크 오류 → STAGE 5C
+- 2차 팩트 오류 → STAGE 5D
+- 이미지 사실/권리 → STAGE 6
 
-# 19. FINAL GATES
-
-필수:
-- FIRST SCREEN GATE
-- LINK TIMING GATE
-- LINK HEALTH GATE
-- USER-VISIBLE LINK GATE
-- COPYABLE LINK GATE (해당 시)
-- PRE-PUBLISH LINK RECHECK GATE
-- FACT/NUMBER/DATE GATE
-- NO-SEARCH-BACK GATE
-- RETENTION VALUE GATE
-- TASK COMPLETION GATE
-- MONETIZATION SAFETY GATE
-- VISUAL TRUST GATE
-- REQUIREMENT COMPLETENESS GATE
-- MESSAGE DELIVERY GATE
-- TOPIC LOCK GATE
+수정 후 영향을 받는 후속 Gate를 다시 실행한다.
 
 ---
 
-# 20. FINAL CONTROL TOWER
+# 11. PRE-PUBLISH FINAL GATES
 
-최종 승인 관리자는 확인한다.
+최종 출력 직전 순서:
+
+F1 FIRST SCREEN GATE
+→ F2 FACT/NUMBER/DATE GATE
+→ F3 LINK REQUIREMENT COMPLETENESS GATE
+→ F4 CLICKABLE LINK GATE
+→ F5 PRE-PUBLISH LINK RECHECK
+→ F6 NO-SEARCH-BACK GATE
+→ F7 RETENTION VALUE GATE
+→ F8 MOBILE UX GATE
+→ F9 MONETIZATION SAFETY GATE
+→ F10 VISUAL TRUST GATE
+→ F11 REQUIREMENT COMPLETENESS GATE
+→ F12 MESSAGE DELIVERY GATE
+→ FINAL CONTROL TOWER
+
+F1~F12 중 하나라도 FAIL이면 최종 승인 금지.
+
+## PRE-PUBLISH LINK RECHECK
+특히 예매·신청·예약·가입·잔여석·재고·프로모션 링크를 발행 직전에 다시 연다.
+현재도 유효해야 FINAL_PASS.
+
+---
+
+# 12. FINAL CONTROL TOWER
+
+최종 관리자는 다음을 1개씩 체크한다.
 
 - 사용자 요구 전부 반영
 - 제목 약속 해결
-- 팩트 최신성
-- 링크 후보 실제 오픈 검증
-- 링크 목적/최신성/공식성 일치
-- 발행 직전 링크 재확인
-- **사용자 화면에서 실제 클릭 가능한 링크가 전달됐는가**
-- **글쓰기 블록이 링크를 보존하지 못하는 환경이면 마커+클릭패널 또는 복사용 export가 제공됐는가**
-- LINK-CRITICAL 글의 필수 링크가 모두 전달됐는가
+- 첫 화면 핵심답
+- 최신 팩트
+- 필수 링크 종류 누락 없음
+- 필수 링크 실제 오픈 검증
+- 필수 링크 본문 클릭 문구로 삽입
+- 링크 위치 적절
+- 링크 발행 직전 재검증
 - 모바일 가독성
-- 체류 가치
-- 내부링크 실재 여부
+- 체류 추가가치
+- 실제 내부링크만 사용
 - 광고 클릭 유도 없음
 - 이미지 계획 사실성/권리
+- 글쓰기 블록 완전 출력 준비
 
 특히:
+> 링크팩이 있어도 글쓰기 블록 안에 클릭 가능한 링크가 없으면 승인 거부.
 
-> 내부 링크 데이터가 있어도 사용자 화면에서 링크가 보이지 않으면 승인 거부.
-
-> 글쓰기 블록이 링크를 숨기는 환경인데 `링크 포함 완료`라고 표시하면 승인 거부.
-
-> LINK-CRITICAL인데 클릭 패널/복사용 전달이 없으면 승인 거부.
+> 자동화라는 이유로 Micro-Gate 하나라도 생략하면 승인 거부.
 
 ---
 
-# 21. PUBLISH PACKAGE
+# 13. PUBLISH PACKAGE
 
-AUTO FULL 첫 최종 응답은 다음 순서다.
+AUTO FULL 최종 응답 순서:
 
-## ① 최종 선정 결과
-주제 / 제목 / 메인 키워드 / 콘텐츠 각도
+1. 최종 선정 결과
+2. **클릭 가능한 문구 링크가 포함된 하나의 발행용 글쓰기 블록**
+3. 검증 링크팩(관리용)
+4. 이미지 제작팩
+5. Requirement Ledger 핵심 PASS 요약
+6. Final QA
+7. 이미지 큐 READY
 
-## ② 발행용 글쓰기 블록
-제목 / 본문 / 이미지 삽입 표시 / 링크 마커 또는 지원되는 inline link / 태그
-
-## ③ CLICKABLE LINK PANEL
-필수 링크를 번호·목적과 함께 실제 클릭 가능한 제품 지원 링크 UI로 제공.
-본문 마커 L1/L2/L3와 1:1 매칭.
-
-## ④ COPYABLE PUBLISH EXPORT
-LINK-CRITICAL 또는 사용자가 링크까지 복사 가능한 발행본을 원하고, 현재 surface에서 raw URL 보존이 불확실하면 가능한 경우 TXT/HTML 파일로 제공.
-
-## ⑤ 검증 링크팩
-- ID
-- 목적
-- 타입
-- PASS 1
-- PASS 2
-- PRE-PUBLISH RECHECK
-- 전달 방식
-- 최종 상태
-
-## ⑥ 이미지 제작팩
-번호 / 위치 / 역할 / 문구 / 장면 / 사실근거 / 권리 상태
-
-## ⑦ 요구사항 충족 요약 + 최종 QA
-PASS / LIMITED / BLOCKED
-
-## ⑧ 이미지 큐 상태
-`READY — 다음 턴에 이미지 시작 또는 1`
+글쓰기 블록이 실사용 최종 원고다.
+링크팩은 검수용 사본일 뿐 본문 링크를 대신하지 못한다.
 
 ---
 
-# 22. MUST
+# 14. IMAGE QUEUE
 
+같은 턴에서는 글만 완성한다.
+
+글 전달 완료 후:
+`PUBLISH_PACKAGE_DELIVERED = TRUE`
+`VISUAL_QUEUE_STATUS = READY`
+`NEXT_IMAGE_INDEX = 1`
+
+다음 사용자 턴의 `이미지 시작`, `1`, `다음`, `계속`으로 한 장씩 생성한다.
+
+---
+
+# 15. MUST
+
+- Micro-Gate 순차 실행
+- 각 단계 작업→검수→승인
+- 암묵적 PASS 금지
+- 링크 필요성 먼저 정의
+- 링크 실제 오픈 검증
+- 링크 본문 clickable text 삽입
+- 삽입 링크 2차 검증
+- 발행 직전 링크 재확인
+- 글쓰기 블록을 최종 원고로 제공
 - 글 먼저, 이미지 나중
-- Requirement Ledger
-- 1~6단계
-- Reviewer → Approval → 반려 루프
 - Final Control Tower
-- 최신 팩트 검증
-- 링크 후보 실제 오픈 검증
-- 본문 전달 링크 재검증
-- 날짜 민감 링크 발행 직전 재검증
-- 링크 핵심 주제 LINK-CRITICAL MODE
-- **사용자에게 실제 보이는 클릭 링크 제공**
-- **글쓰기 블록 링크 렌더링이 불안정하면 Marker + Click Panel**
-- **링크까지 복사 가능한 결과가 필요하면 Copyable Export fallback**
-- 모바일 퍼스트
-- 체류 추가가치
-- Trusted Visual Pipeline
-- Topic Lock
-- 개별 이미지 한 장씩 생성
 
-# 23. MUST NOT
+# 16. MUST NOT
 
-- 내부 링크 참조가 있다는 이유만으로 사용자 전달 PASS
-- 글쓰기 블록에서 보이지 않는 링크를 `들어갔다`고 주장
-- 링크팩만 주고 실제 클릭 링크 생략
+- 자동화라는 이유로 단계 합치기/생략
+- 링크팩만 주고 본문 링크 생략
+- `[공식 링크 L1]` 같은 마커만 남기기
+- raw URL 파일을 기본값으로 사용
 - 검증하지 않은 URL
-- 오래된 이벤트/이전 시즌 페이지
-- 로그인/앱 제한 숨김
-- 같은 URL 반복으로 커버리지 맞춤
+- 오래된 이벤트 페이지
+- 내부링크 추측
 - 글 출력 전에 이미지 생성
-- 여러 이미지를 백그라운드 생성한다고 약속
-- 이전 글 이미지 컨텍스트 재사용
-- 권리 불명 사진 재가공
+- 권리 불명 이미지 재가공
 - 실존 인물을 다른 얼굴로 대체
 - 광고 클릭 유도
-- 체류를 위한 낚시/반복
 
 ---
 
-# 24. CORE FORMULA
+# 17. CORE FORMULA
 
-> UNIVERSAL INPUT
-> × REQUIREMENT LEDGER
-> × NAVER TRAFFIC
+> REQUIREMENT LEDGER
+> × NO-SKIP MICRO-GATES
+> × TRAFFIC SCOUT
 > × SEARCH INTENT
-> × FACT CHECK
-> × ANSWER FIRST
-> × RETENTION
-> × ADAPTIVE LINK TIMING
-> × LINK-CRITICAL MODE
-> × MULTI-PASS LINK VERIFICATION
-> × VISIBLE LINK DELIVERY
-> × COPYABLE LINK EXPORT FALLBACK
-> × MOBILE UX
-> × TRUSTED VISUALS
-> × HARD APPROVAL LOOP
+> × FACT SET
+> × LINK REQUIREMENT MAP
+> × LINK DISCOVERY
+> × LINK PASS 1
+> × LINK PLACEMENT
+> × CONTENT ARCHITECTURE
+> × DRAFT
+> × INLINE CLICKABLE LINKS
+> × LINK PASS 2
+> × SECOND FACT CHECK
+> × VISUAL TRUST
+> × PRE-PUBLISH RECHECK
 > × FINAL CONTROL TOWER
-> × DELIVERY BARRIER
-> × TOPIC LOCK
-> × PUBLISH PACKAGE FIRST
-> × ONE-IMAGE-PER-TURN VISUAL QUEUE
 
-최종 목표:
+최종 원칙:
 
-> 링크는 내부적으로 검증됐다는 것만으로 충분하지 않다.
-> 사용자가 실제로 볼 수 있고 클릭할 수 있어야 하며,
-> 네이버 복사·붙여넣기에서 raw URL까지 필요하면 현재 surface 한계를 인정하고 export로 보완한다.
-> 링크 전달까지 성공한 뒤에만 글을 완성본으로 승인한다.
+> 자동화는 단계를 없애는 것이 아니라 사용자가 명령을 반복하지 않아도 모든 단계를 순서대로 자동 실행하는 것이다.
+> 각 필수 단계는 독립 검수와 승인 없이는 다음 단계로 넘어가지 않는다.
+> 링크는 글쓰기 블록 안에서 주소가 아닌 클릭 가능한 문구로 제공하는 것을 기본으로 한다.
