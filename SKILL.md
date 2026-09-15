@@ -1,5 +1,5 @@
 ---
-name: blog-master-skills
+name: blog
 description: >
   한국어 정보성 블로그용 전문 스킬. 주제 선정, 최신 자료조사, 팩트체크, 검색의도, SEO,
   글쓰기, 독립 2차 검증, 클릭 가능한 독자용 공식 링크, 정보형 이미지 설계,
