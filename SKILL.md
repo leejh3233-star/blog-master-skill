@@ -4,11 +4,11 @@ description: >
   한국어 정보성 블로그용 전문 스킬. 주제 선정, 최신 자료조사, 팩트체크, 검색의도, SEO,
   글쓰기, 독립 2차 검증, 독자용 공식 링크, 정보형 이미지 설계를 1~6단계로 수행한다.
   자동화는 단계를 생략하지 않고 사용자의 반복 입력만 줄인다.
-version: 1.0.0
+version: 1.1.0
 language: ko
 ---
 
-# BLOG MASTER SKILL v1.0
+# BLOG MASTER SKILL v1.1
 
 ## 0. 역할과 목표
 
@@ -30,7 +30,8 @@ language: ko
 3. `knowledge/02-seo-writing.md`
 4. `knowledge/03-official-links.md`
 5. `knowledge/04-topic-ledger.md`
-6. 이미지 단계에서는 추가로 `knowledge/05-image-pipeline.md`
+6. `knowledge/06-github-tools.md`
+7. 이미지 단계에서는 추가로 `knowledge/05-image-pipeline.md`
 
 우선순위:
 **현재 GPT 지침 → Knowledge 운영 기준 → 최신 공식 자료**
@@ -204,6 +205,18 @@ language: ko
 최종 품질 점수가 85점 미만이면 수정 후 다시 검토한다.
 점수와 내부 분석은 사용자가 요청하지 않으면 출력하지 않는다.
 
+## FINAL FOUR-GATE
+
+2차 팩트체크 후 `knowledge/06-github-tools.md` 기준으로 다음을 순서대로 검사한다.
+
+1. `STYLE_LINT` — 과장, 반복, 군더더기, 용어·문체 일관성
+2. `TEXT_RULE_LINT` — 자연어 규칙, 숫자·단위, 예정/확정, 중복 주장
+3. `LINK_HEALTH` — 독자용 링크가 필요한 글만: 접속·목적·최신성
+4. `STRUCTURE_LINT` — 제목·소제목·목록·문단·내부참조 노출
+
+하나라도 FAIL이면 해당 부분을 직접 수정하고 다시 검사한다.
+외부 Vale·textlint·lychee·markdownlint-cli2가 설치되지 않아도 내부 규칙으로 동일 게이트를 수행한다.
+
 5단계 완료 후 `FINAL_ARTICLE`을 확정한다.
 
 ---
@@ -241,7 +254,22 @@ language: ko
 
 ---
 
-# 10. 최우선 원칙
+# 10. GitHub 검증 도구 적용 원칙
+
+이 스킬은 다음 프로젝트에서 검증된 품질관리 개념을 참고한다.
+- Vale: 문체·스타일 린트
+- textlint: 모듈형 자연어 규칙 검사
+- lychee: 링크 유효성 검사
+- markdownlint-cli2: 문서 구조 린트
+
+이들은 **필수 설치 의존성이 아니다.**
+실행 환경에 설치되어 있으면 보조 검증으로 사용할 수 있지만, 설치 여부와 무관하게 `knowledge/06-github-tools.md`의 내부 게이트는 항상 수행한다.
+
+한국어 문맥, 현재 GPT 지침, 최신 공식 자료가 외부 도구 결과보다 우선한다.
+
+---
+
+# 11. 최우선 원칙
 
 - 키워드를 위한 글을 쓰지 않는다.
 - 검색자의 질문에 제대로 답하고 그 안에 키워드를 자연스럽게 배치한다.
