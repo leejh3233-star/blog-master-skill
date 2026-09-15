@@ -1,6 +1,6 @@
-# Blog Master Skill v1.4
+# Blog Master Skill v1.5
 
-한국어 정보성 블로그를 위한 **주제 선정 → 자료조사 → 팩트체크 → 검색의도·SEO → 글쓰기 → 독립 재검증 → 클릭 가능한 공식 링크 → 정보형 이미지 → REAL IMAGE MODE → SmartEditor 구조화 출력** 스킬입니다.
+한국어 정보성 블로그를 위한 **주제 선정 → 자료조사 → 팩트체크 → 검색의도·SEO → 글쓰기 → 독립 재검증 → 클릭 가능한 공식 링크 → 정보형 이미지 → REAL IMAGE MODE → SmartEditor 구조화 출력 → 프롬프트2000 MCP 검증 강화** 스킬입니다.
 
 핵심 원칙:
 
@@ -40,6 +40,31 @@ SmartEditor JSON 출력
 ```
 사용자가 제공한 JSON 스키마를 우선해 블록형 자동화 출력으로 변환합니다.
 
+## 프롬프트2000 MCP 강화
+
+프롬프트2000 MCP의 전체 자료를 한꺼번에 넣지 않고 현재 단계에 필요한 프롬프트만 검색합니다. 검색 결과는 전문을 확인하고 기존 지침과 충돌을 검사한 뒤 작업 방식만 추출합니다.
+
+실제 MCP 검색·전문 검토로 반영한 핵심:
+
+- 공식자료 우선과 중요 주장 교차검증
+- 자료 발행일과 실제 시행·방송·행사일 구분
+- 검색의도 기반 키워드 군집과 콘텐츠 갭 분석
+- 기존 글 중복·키워드 잠식 검사
+- 실제 게시 글만 사용하는 자연스러운 내부링크
+- 첫 화면 훅, 짧은 모바일 문단, AI 상투어 제거
+
+Google 전용 메타태그·스키마, 키워드 밀도, 근거 없는 점수·검색량·성과 수치는 자동 적용하지 않습니다.
+
+주요 명령:
+
+- `MCPBOOST` — 현재 단계만 보강
+- `MCPDEEP` — 여러 프롬프트 전문 비교
+- `MCPREFRESH` — 검증 Blueprint 갱신
+- `MCPAUDIT` — 검색·채택·제외 내역 확인
+- `PROMPTLOCK` — 검증된 조합 고정
+
+상세 규칙은 `knowledge/09-prompt2000-mcp.md`에서 관리합니다.
+
 ## 1~6단계
 
 1. **주제 선정·1차 조사** — 현재성, 계절성, 검색 필요성, 공식자료 확보 가능성, 중복 주제 검사
@@ -53,12 +78,12 @@ SmartEditor JSON 출력
 
 한 번 읽고 끝내지 않고 단계에 들어가기 직전 관련 Knowledge를 다시 적용합니다.
 
-- **1단계:** `00-quality-engine`, `01-research-factcheck`, `04-topic-ledger`
-- **2단계:** `00-quality-engine`, `02-seo-writing`, `04-topic-ledger`, 필요 시 `08-smarteditor-structured-output`
-- **3단계:** `00-quality-engine`, `01-research-factcheck`, `02-seo-writing`, `03-official-links`, 필요 시 `07-real-image-mode`, `08-smarteditor-structured-output`
-- **4단계:** `00-quality-engine`, `01-research-factcheck`, `02-seo-writing`, `03-official-links`, `06-github-tools`, 필요 시 `08-smarteditor-structured-output`
-- **5단계:** `00-quality-engine`, `01-research-factcheck`, `03-official-links`, `06-github-tools`, 필요 시 `08-smarteditor-structured-output`
-- **6단계:** `00-quality-engine`, `05-image-pipeline`, 방송·연예·실존 대상이면 `07-real-image-mode`, 구조화 이미지 출력이면 `08-smarteditor-structured-output`
+- **1단계:** `00-quality-engine`, `01-research-factcheck`, `04-topic-ledger`, 필요 시 `09-prompt2000-mcp`
+- **2단계:** `00-quality-engine`, `02-seo-writing`, `04-topic-ledger`, 필요 시 `08-smarteditor-structured-output`, `09-prompt2000-mcp`
+- **3단계:** `00-quality-engine`, `01-research-factcheck`, `02-seo-writing`, `03-official-links`, 필요 시 `07-real-image-mode`, `08-smarteditor-structured-output`, `09-prompt2000-mcp`
+- **4단계:** `00-quality-engine`, `01-research-factcheck`, `02-seo-writing`, `03-official-links`, `06-github-tools`, 필요 시 `08-smarteditor-structured-output`, `09-prompt2000-mcp`
+- **5단계:** `00-quality-engine`, `01-research-factcheck`, `03-official-links`, `06-github-tools`, 필요 시 `08-smarteditor-structured-output`, `09-prompt2000-mcp`
+- **6단계:** `00-quality-engine`, `05-image-pipeline`, 방송·연예·실존 대상이면 `07-real-image-mode`, 구조화 이미지 출력이면 `08-smarteditor-structured-output`, MCP 이미지 강화 요청이면 `09-prompt2000-mcp`
 
 검증되지 않은 정보는 다음 단계로 확정 사실처럼 넘기지 않습니다.
 
@@ -221,6 +246,7 @@ FORMAT_PRESET은 깔끔한 정보형, 절차형, 비교형, FAQ 보강형 등을
 - `knowledge/06-github-tools.md` — Vale/textlint/lychee/markdownlint 품질 게이트
 - `knowledge/07-real-image-mode.md` — 방송·연예·실존 대상용 실제 이미지 조사·권리·재가공 기준
 - `knowledge/08-smarteditor-structured-output.md` — SmartEditor·JSON 자동화 출력, 글 유형·프리셋·블록·image_prompts 규칙
+- `knowledge/09-prompt2000-mcp.md` — 프롬프트2000 MCP 검색·전문 확인·패턴 선별·충돌 검사·실패 대응
 
 ## 핵심 원칙
 
