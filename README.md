@@ -8,6 +8,23 @@
 
 자동화는 단계를 없애는 것이 아니라 사용자의 반복 입력을 줄이는 방식으로 동작합니다.
 
+## 설치 및 호출
+
+이 저장소의 스킬 이름은 `blog`입니다. 저장소 이름(`blog-master-skill`)과 스킬 이름이 다르므로 설치할 때 대상 스킬 이름을 **blog**로 지정하는 것을 권장합니다.
+
+Codex에서:
+
+```text
+$skill-installer https://github.com/leejh3233-star/blog-master-skill 을 blog 이름으로 설치해줘
+```
+
+설치 후 Codex를 다시 시작해 스킬 목록을 새로 읽은 다음 다음처럼 호출합니다.
+
+```text
+$blog 주제
+```
+
+
 ## 주요 명령
 
 ```text
