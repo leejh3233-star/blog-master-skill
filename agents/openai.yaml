@@ -1,0 +1,4 @@
+interface:
+  display_name: "Blog Master"
+  short_description: "최신 자료 검증부터 한국어 블로그 원고·이미지까지 지원"
+  default_prompt: "Use $blog to research current sources, fact-check them, write a Korean information blog post, and prepare the image stage."
