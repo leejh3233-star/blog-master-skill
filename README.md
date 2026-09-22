@@ -1,4 +1,4 @@
-# Blog Master Skill v1.7
+# Blog Master Skill v1.8
 
 한국어 정보성 블로그를 위한 **주제 선정 → 자료조사 → 팩트체크 → 검색의도·SEO → 글쓰기 → 독립 재검증 → 클릭 가능한 공식 링크 → 정보형 이미지 → REAL IMAGE MODE → 모바일 가독성·SmartEditor 편집 UX → 구조화 출력 → 프롬프트2000 MCP 검증 강화** 스킬입니다.
 
@@ -7,6 +7,21 @@
 > 조사와 검증은 깊게, 최종 출력은 독자가 읽고 싶은 정보만 간결하게.
 
 자동화는 단계를 없애는 것이 아니라 사용자의 반복 입력을 줄이는 방식으로 동작합니다.
+
+## v1.8 추가 사항 — 2026-09-22
+
+내부링크·콘텐츠 클러스터 모듈을 추가했습니다.
+
+- 새 글 1단계에서 같은 블로그의 관련 기존 글 후보 탐색
+- 3단계 INTERNAL_LINK_PLAN 설계
+- 4단계 자연스러운 문맥에 내부링크 반영
+- 5단계 내부링크 URL·목적·같은 블로그 여부 재검증
+- 내부링크 분석만 / 수정안 / 자동 적용 모드 지원
+- HUB & CLUSTER, ORPHAN_CANDIDATE, OUTDATED_CONTENT 후보 식별
+- 링크 개수보다 독자의 다음 질문과 실제 관련성을 우선
+- 기존 공식 링크·지도·예약·출처 링크 보호
+
+- [내부링크 맵·콘텐츠 클러스터](knowledge/13-internal-linking.md)
 
 ## v1.7 추가 사항 — 2026-09-22
 
@@ -291,6 +306,7 @@ FORMAT_PRESET은 깔끔한 정보형, 절차형, 비교형, FAQ 보강형 등을
 - `knowledge/10-ai-citation.md` — 근거 등급, 답변 품질, 인용·노출·유입 분리, 관찰·실험 절차
 - `knowledge/11-github-loader.md` — $blog 호출, GitHub 원본·버전 관리, 검증 상시 적용, 설치와 로딩의 구별
 - `knowledge/12-mobile-publishing-ux.md` — 모바일 문단·스크롤 리듬, 인용구형 소제목, 글자색·굵기, SmartEditor 링크 재검증
+- `knowledge/13-internal-linking.md` — 내부링크 맵, 콘텐츠 클러스터, URL 검증, 고아 글·오래된 글 후보
 
 ## 핵심 원칙
 
