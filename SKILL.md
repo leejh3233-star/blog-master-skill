@@ -9,11 +9,11 @@ description: >
   AI 인용 점검과 GitHub 원본 로딩을 지원하고 팩트체크를 항상 함께 적용한다.
   자동화는 1~6단계를 생략하지 않고 반복 입력만 줄인다.
 metadata:
-  version: "1.7.0"
+  version: "1.8.0"
   language: ko
 ---
 
-# BLOG MASTER SKILL v1.7
+# BLOG MASTER SKILL v1.8
 
 ## 0. 역할과 목표
 
@@ -56,6 +56,7 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 11. knowledge/10-ai-citation.md — 근거 등급·답변 품질·AI 인용과 유입 분리
 12. knowledge/11-github-loader.md — 호출·버전·로딩·팩트체크 상시 적용
 13. knowledge/12-mobile-publishing-ux.md — 모바일 가독성·인용구형 소제목·글자색·SmartEditor 편집 UX
+14. knowledge/13-internal-linking.md — 내부링크 맵·콘텐츠 클러스터·URL 검증·고아 글 후보
 
 우선순위:
 현재 GPT 지침 → Knowledge 운영 기준 → 최신 공식 자료
@@ -93,6 +94,7 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 - 필요 시 07-real-image-mode
 - 구조화 출력이면 08-smarteditor-structured-output
 - 12-mobile-publishing-ux
+- 13-internal-linking
 
 목적: 문단별 질문·팩트·예외·행동 링크·이미지 위치·출력 블록 설계.
 
@@ -105,6 +107,7 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 - MCP 활성화 조건이면 09-prompt2000-mcp
 - 구조화 출력이면 08-smarteditor-structured-output
 - 12-mobile-publishing-ux
+- 13-internal-linking
 
 목적: 검증된 정보만 사용해 독자용 게시 원고 작성.
 
@@ -116,6 +119,7 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 - MCP 활성화 조건이면 09-prompt2000-mcp
 - 구조화 출력이면 08-smarteditor-structured-output
 - 12-mobile-publishing-ux
+- 13-internal-linking
 
 목적: 독립 2차 팩트체크, 링크 재검증, 모바일·문체·구조·JSON 최종 검수.
 
@@ -176,6 +180,15 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 ## 이미지 자동 진행
 5단계에서 확정된 FINAL_ARTICLE만 기준으로 6단계를 수행한다.
 
+## 내부링크 분석
+knowledge/13-internal-linking.md 기준으로 현재 블로그의 기존 글 관계도를 만들고 후보를 제안한다. 실제 글은 수정하지 않는다.
+
+## 내부링크 수정안
+SOURCE / TARGET / 실제 URL / 삽입 위치 / 앵커 텍스트 / 연결 이유를 제안한다. 실제 글은 수정하지 않는다.
+
+## 내부링크 자동 적용
+사용자가 명시적으로 요청한 경우에만 검증된 내부링크 후보를 기존 글에 적용한다. 기존 제목·이미지·공식 링크·공개설정은 임의로 변경하지 않는다.
+
 ## SmartEditor JSON 출력
 최종 원고를 knowledge/08-smarteditor-structured-output.md 기준의 구조화 JSON으로 변환한다.
 
@@ -208,7 +221,7 @@ knowledge/09-prompt2000-mcp.md의 검증 Blueprint를 최신 검색 결과로 �
 
 단순 화제성보다 지금 검색할 이유가 있고 구체적인 답을 줄 수 있는 주제를 우선한다.
 
-반드시 CHAT_TOPIC_LEDGER를 먼저 확인해 이미 완료된 주제와 검색의도가 중복되는 후보를 제거한다.
+반드시 CHAT_TOPIC_LEDGER를 먼저 확인해 이미 완료된 주제와 검색의도가 중복되는 후보를 제거한다. 같은 블로그의 기존 글을 확인할 수 있으면 knowledge/13-internal-linking.md 기준으로 관련 콘텐츠 후보도 탐색하되, 관련 글이 없으면 내부링크를 만들지 않는다.
 
 현재 또는 미래 정책이 공식 발표 전이면 전년도 정보를 연도만 바꿔 현재 정보처럼 쓰지 않는다.
 확정 / 예정 / 전년도 기준 / 공식 발표 전 / 전망을 구분한다.
@@ -274,6 +287,7 @@ FORMAT_PRESET 예:
 - 예시
 - 키워드
 - 필요한 공식 링크
+- 검증된 기존 글이 있으면 INTERNAL_LINK_PLAN
 - 이미지 핵심 정보
 - 이미지 삽입 위치
 - 구조화 출력이면 사용할 블록 타입
@@ -288,6 +302,7 @@ FORMAT_PRESET 예:
 도입 → 핵심 답 → 대상·조건 → 금액·기간 → 신청·이용방법 → 주의사항 → 활용 팁 → 마무리 → 공식 확인·신청 바로가기
 
 주제에 따라 유연하게 바꾼다.
+검증된 관련 기존 글이 있으면 독자의 다음 질문이 생기는 자연스러운 위치에 내부링크를 설계한다. 같은 단어만 겹치는 약한 관련성은 제외한다.
 필요하지 않은 문단·링크·이미지는 수를 채우기 위해 만들지 않는다.
 
 ---
@@ -335,6 +350,13 @@ FORMAT_PRESET 예:
 
 방송·연예 글은 REAL IMAGE MODE 역할을 표시할 수 있다.
 이미지 수를 채우기 위해 의미 없는 삽입 위치를 만들지 않는다.
+
+## 내부링크
+
+3단계 INTERNAL_LINK_PLAN에서 STRONG 또는 명확한 MEDIUM으로 판정되고 실제 URL이 검증된 기존 글만 자연스럽게 연결한다.
+앵커 텍스트는 "여기 클릭" 대신 대상 글의 내용을 설명한다.
+기존 공식 링크·지도·예약·출처 링크를 내부링크로 대체하지 않는다.
+관련 기존 글이 없으면 내부링크를 넣지 않는다.
 
 ## 독자용 공식 링크
 
@@ -387,7 +409,7 @@ FORMAT_PRESET 예:
 
 ## LINK RECHECK
 
-게시 직전 모든 독자용 링크를 다시 확인한다.
+게시 직전 모든 독자용 링크와 내부링크를 다시 확인한다. 내부링크는 같은 TARGET BLOG의 실제 게시글인지, 삭제·비공개가 아닌지, 앵커 텍스트와 목적지가 일치하는지도 확인한다.
 PASS 조건은 정상 접속 + 목적 일치 + 최신성이다.
 
 ## FINAL FOUR-GATE
