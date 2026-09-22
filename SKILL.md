@@ -6,13 +6,14 @@ description: >
   정보형 이미지/REAL IMAGE MODE, SmartEditor·자동화 JSON, 프롬프트2000 MCP 패턴 선별을 수행한다.
   사용자가 `$blog`를 호출하거나 새 글 주제 발굴, 시의성 글 작성, 기존 초안 검증·개선,
   공식 링크 확인, 이미지 자동 진행, SmartEditor/자동화 JSON 출력을 요청할 때 사용한다.
+  AI 인용 점검과 GitHub 원본 로딩을 지원하고 팩트체크를 항상 함께 적용한다.
   자동화는 1~6단계를 생략하지 않고 반복 입력만 줄인다.
 metadata:
-  version: "1.5.0"
+  version: "1.6.0"
   language: ko
 ---
 
-# BLOG MASTER SKILL v1.5
+# BLOG MASTER SKILL v1.6
 
 ## 0. 역할과 목표
 
@@ -25,6 +26,16 @@ metadata:
 
 자동화는 단계를 생략하는 것이 아니라 사용자의 반복 입력을 없애는 것이다.
 새 규칙을 추가하더라도 기존 1~6단계 핵심 기능은 삭제하지 않고 보완한다.
+
+## 0.1 호출·팩트체크 상시 적용
+
+`$blog` 호출과 원본 갱신은 `knowledge/11-github-loader.md`를 따른다. 첫 호출·새 글·새로고침에서는 실제 읽은 저장소 커밋과 스킬 버전을 확인한다. 파일 읽기, 호스트 설치, 계정 전체 설정 변경을 혼동하지 않는다. 새 채팅용 지침은 `CHATGPT-BOOTSTRAP.md`에 있다.
+
+`$blog`에는 기존 공식자료 우선·최신성·핵심 사실 교차검증·독립 2차 팩트체크·링크 검증을 항상 포함한다. `$blog-factcheck-pro`를 별도로 반복 입력할 필요는 없다. 실제로 읽지 않은 외부 동명 스킬을 설치·호출했다고 주장하지 않는다.
+
+AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.md`를 함께 적용한다. 공식 확인·관찰 데이터·편집 규칙·실험 가설을 구분하고, 인용 여부를 조회수·클릭·홈피드 노출과 동일시하지 않는다. 정확성·독자 가치가 인용을 노린 형식보다 우선한다.
+
+사용자가 특정 단계만 지정하면 그 단계만 수행한다. 스킬 분석·수정 요청에는 해당 작업을 수행하며 새 글을 임의 작성하거나 발행하지 않는다. `$blog 상태`, `$blog 새로고침`, `$blog AI인용 점검`은 11-github-loader의 명령 해석을 따른다.
 
 ---
 
@@ -42,6 +53,8 @@ metadata:
 8. 방송·연예·실존 인물·실제 장소 등 실제 이미지 정체성이 중요한 주제는 knowledge/07-real-image-mode.md
 9. SmartEditor JSON·자동화 JSON·블록형 출력 요청은 knowledge/08-smarteditor-structured-output.md
 10. 프롬프트2000 MCP 검색·선별·감사 요청은 knowledge/09-prompt2000-mcp.md
+11. knowledge/10-ai-citation.md — 근거 등급·답변 품질·AI 인용과 유입 분리
+12. knowledge/11-github-loader.md — 호출·버전·로딩·팩트체크 상시 적용
 
 우선순위:
 현재 GPT 지침 → Knowledge 운영 기준 → 최신 공식 자료
@@ -51,6 +64,7 @@ metadata:
 ## 단계별 Knowledge 재검토 — 필수
 
 한 번 읽고 끝내지 않는다. 각 단계에 들어가기 직전 해당 Knowledge를 다시 적용한다.
+1~5단계에는 아래 목록과 함께 10-ai-citation의 해당 단계 규칙을 적용한다. 원본 재조회·버전 고정은 11-github-loader를 따른다.
 
 ### 1단계
 - 00-quality-engine
@@ -378,6 +392,8 @@ PASS 조건은 정상 접속 + 목적 일치 + 최신성이다.
 2. TEXT_RULE_LINT — 자연어 규칙, 숫자·단위, 예정/확정, 중복 주장
 3. LINK_HEALTH — 독자용 링크가 필요한 글: 접속·목적·최신성
 4. STRUCTURE_LINT — 제목·소제목·목록·문단·내부참조 노출
+
+추가로 knowledge/10-ai-citation.md의 CITATION_READINESS_QA를 수행한다. 이는 내부 편집 검사이며 네이버 공식 점수나 인용 확률이 아니다.
 
 구조화 출력이면 추가로 JSON_VALIDATION을 수행한다.
 

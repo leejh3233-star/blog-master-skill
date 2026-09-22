@@ -1,4 +1,4 @@
-# Blog Master Skill v1.5
+# Blog Master Skill v1.6
 
 한국어 정보성 블로그를 위한 **주제 선정 → 자료조사 → 팩트체크 → 검색의도·SEO → 글쓰기 → 독립 재검증 → 클릭 가능한 공식 링크 → 정보형 이미지 → REAL IMAGE MODE → SmartEditor 구조화 출력 → 프롬프트2000 MCP 검증 강화** 스킬입니다.
 
@@ -7,6 +7,19 @@
 > 조사와 검증은 깊게, 최종 출력은 독자가 읽고 싶은 정보만 간결하게.
 
 자동화는 단계를 없애는 것이 아니라 사용자의 반복 입력을 줄이는 방식으로 동작합니다.
+
+## v1.6 추가 사항 — 2026-09-22
+
+`$blog`에 기존 팩트체크·링크 검증을 항상 포함하고, 네이버 AI 인용 관련 공식 확인·관찰 데이터·편집 규칙·실험 가설을 구별합니다. AI 인용과 실제 조회수·유입은 별도로 측정합니다. 이번 업데이트는 공식 자료 기반 1차 운영 패치이며, 블로그 유입 원자료를 분석하거나 인용 효과 실험을 완료한 보고서는 아닙니다.
+
+- [일반 ChatGPT의 $blog 연결 문구](CHATGPT-BOOTSTRAP.md)
+- [AI 인용·답변 품질·성과 측정](knowledge/10-ai-citation.md)
+- [GitHub 원본 로딩·버전 관리](knowledge/11-github-loader.md)
+- [변경 이력](CHANGELOG.md)
+
+일반 채팅에서 `$blog`는 위 연결 문구로 해석하는 사용자 지정 별칭입니다. GitHub에 올리는 것만으로 모든 새 채팅에 스킬이 자동 설치되지는 않습니다. 해당 대화에 지침과 저장소 접근 도구가 필요합니다. OpenAI 공식 안내 확인일 기준 ChatGPT의 설치된 스킬 선택은 `@`, Codex CLI·IDE는 `$` 또는 `/skills`입니다.
+
+추가 명령: `$blog 상태`, `$blog 새로고침`, `$blog AI인용 점검 [본문 또는 URL]`. 상태는 실제 읽은 버전·커밋·진행 단계만 표시합니다. 새로고침 없이 진행 중 원고에 다른 규칙 버전을 조용히 섞지 않습니다.
 
 ## 설치 및 호출
 
@@ -18,7 +31,7 @@ Codex에서:
 $skill-installer https://github.com/leejh3233-star/blog-master-skill 을 blog 이름으로 설치해줘
 ```
 
-설치 후 Codex를 다시 시작해 스킬 목록을 새로 읽은 다음 다음처럼 호출합니다.
+설치 후 스킬 목록에서 인식되는지 확인하고, 보이지 않으면 Codex를 다시 시작한 다음 다음처럼 호출합니다. 로컬 설치본은 GitHub 변경만으로 자동 동기화됐다고 가정하지 않습니다.
 
 ```text
 $blog 주제
@@ -102,6 +115,7 @@ Google 전용 메타태그·스키마, 키워드 밀도, 근거 없는 점수·�
 - **5단계:** `00-quality-engine`, `01-research-factcheck`, `03-official-links`, `06-github-tools`, 필요 시 `08-smarteditor-structured-output`, `09-prompt2000-mcp`
 - **6단계:** `00-quality-engine`, `05-image-pipeline`, 방송·연예·실존 대상이면 `07-real-image-mode`, 구조화 이미지 출력이면 `08-smarteditor-structured-output`, MCP 이미지 강화 요청이면 `09-prompt2000-mcp`
 
+1~5단계에는 `10-ai-citation`을 함께 적용하고, 호출·버전 관리는 `11-github-loader`를 따릅니다.
 검증되지 않은 정보는 다음 단계로 확정 사실처럼 넘기지 않습니다.
 
 ## REFERENCE INPUT FIREWALL
@@ -264,6 +278,8 @@ FORMAT_PRESET은 깔끔한 정보형, 절차형, 비교형, FAQ 보강형 등을
 - `knowledge/07-real-image-mode.md` — 방송·연예·실존 대상용 실제 이미지 조사·권리·재가공 기준
 - `knowledge/08-smarteditor-structured-output.md` — SmartEditor·JSON 자동화 출력, 글 유형·프리셋·블록·image_prompts 규칙
 - `knowledge/09-prompt2000-mcp.md` — 프롬프트2000 MCP 검색·전문 확인·패턴 선별·충돌 검사·실패 대응
+- `knowledge/10-ai-citation.md` — 근거 등급, 답변 품질, 인용·노출·유입 분리, 관찰·실험 절차
+- `knowledge/11-github-loader.md` — $blog 호출, GitHub 원본·버전 관리, 검증 상시 적용, 설치와 로딩의 구별
 
 ## 핵심 원칙
 
