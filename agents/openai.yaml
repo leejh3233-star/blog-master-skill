@@ -1,4 +1,4 @@
 interface:
   display_name: "Blog Master"
-  short_description: "최신 검증·모바일 가독성·SmartEditor 편집까지 지원"
-  default_prompt: "Use $blog to research current sources, fact-check them, write a mobile-readable Korean Naver blog post, preserve verified links, and prepare SmartEditor-friendly publishing and image stages."
+  short_description: "최신 검증·내부링크·모바일 편집까지 지원"
+  default_prompt: "Use $blog to research current sources, fact-check them, write a mobile-readable Korean Naver blog post, preserve verified links, add only relevant verified internal links, and prepare SmartEditor-friendly publishing and image stages."
