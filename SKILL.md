@@ -3,17 +3,17 @@ name: blog
 description: >
   한국어 정보성·네이버 블로그 글을 위한 1~6단계 스킬. 최신 자료조사와 팩트체크,
   검색의도·SEO, 제목·구조 설계, 게시용 원고, 독립 2차 검증, 클릭 가능한 공식 링크,
-  정보형 이미지/REAL IMAGE MODE, SmartEditor·자동화 JSON, 프롬프트2000 MCP 패턴 선별을 수행한다.
+  정보형 이미지/REAL IMAGE MODE, SmartEditor·자동화 JSON, 모바일 가독성·편집 UX, 프롬프트2000 MCP 패턴 선별을 수행한다.
   사용자가 `$blog`를 호출하거나 새 글 주제 발굴, 시의성 글 작성, 기존 초안 검증·개선,
   공식 링크 확인, 이미지 자동 진행, SmartEditor/자동화 JSON 출력을 요청할 때 사용한다.
   AI 인용 점검과 GitHub 원본 로딩을 지원하고 팩트체크를 항상 함께 적용한다.
   자동화는 1~6단계를 생략하지 않고 반복 입력만 줄인다.
 metadata:
-  version: "1.6.0"
+  version: "1.7.0"
   language: ko
 ---
 
-# BLOG MASTER SKILL v1.6
+# BLOG MASTER SKILL v1.7
 
 ## 0. 역할과 목표
 
@@ -55,6 +55,7 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 10. 프롬프트2000 MCP 검색·선별·감사 요청은 knowledge/09-prompt2000-mcp.md
 11. knowledge/10-ai-citation.md — 근거 등급·답변 품질·AI 인용과 유입 분리
 12. knowledge/11-github-loader.md — 호출·버전·로딩·팩트체크 상시 적용
+13. knowledge/12-mobile-publishing-ux.md — 모바일 가독성·인용구형 소제목·글자색·SmartEditor 편집 UX
 
 우선순위:
 현재 GPT 지침 → Knowledge 운영 기준 → 최신 공식 자료
@@ -91,6 +92,7 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 - MCP 활성화 조건이면 09-prompt2000-mcp
 - 필요 시 07-real-image-mode
 - 구조화 출력이면 08-smarteditor-structured-output
+- 12-mobile-publishing-ux
 
 목적: 문단별 질문·팩트·예외·행동 링크·이미지 위치·출력 블록 설계.
 
@@ -102,6 +104,7 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 - 06-github-tools
 - MCP 활성화 조건이면 09-prompt2000-mcp
 - 구조화 출력이면 08-smarteditor-structured-output
+- 12-mobile-publishing-ux
 
 목적: 검증된 정보만 사용해 독자용 게시 원고 작성.
 
@@ -112,8 +115,9 @@ AI 인용 관련 작업과 1~5단계 글쓰기에는 `knowledge/10-ai-citation.m
 - 06-github-tools
 - MCP 활성화 조건이면 09-prompt2000-mcp
 - 구조화 출력이면 08-smarteditor-structured-output
+- 12-mobile-publishing-ux
 
-목적: 독립 2차 팩트체크, 링크 재검증, 문체·구조·JSON 최종 검수.
+목적: 독립 2차 팩트체크, 링크 재검증, 모바일·문체·구조·JSON 최종 검수.
 
 ### 6단계
 - 00-quality-engine
@@ -393,7 +397,7 @@ PASS 조건은 정상 접속 + 목적 일치 + 최신성이다.
 3. LINK_HEALTH — 독자용 링크가 필요한 글: 접속·목적·최신성
 4. STRUCTURE_LINT — 제목·소제목·목록·문단·내부참조 노출
 
-추가로 knowledge/10-ai-citation.md의 CITATION_READINESS_QA를 수행한다. 이는 내부 편집 검사이며 네이버 공식 점수나 인용 확률이 아니다.
+추가로 knowledge/10-ai-citation.md의 CITATION_READINESS_QA와 knowledge/12-mobile-publishing-ux.md의 MOBILE_READER_QA·CITATION_EXTRACTABILITY_QA를 수행한다. 이는 내부 편집 검사이며 네이버 공식 점수나 인용 확률이 아니다.
 
 구조화 출력이면 추가로 JSON_VALIDATION을 수행한다.
 
